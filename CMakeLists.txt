@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
-project(bulk VERSION 0.0.$ENV{TRAVIS_BUILD_NUMBER})
+project(bulkmt VERSION 0.0.$ENV{TRAVIS_BUILD_NUMBER})
 #project(bulkmt VERSION 0.0)
 
 include_directories(
