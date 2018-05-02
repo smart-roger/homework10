@@ -56,7 +56,6 @@ void threadConsoleFunction(bool& flagWorking,
 void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& queue){
     size_t      bulkCounter(0);
     size_t      commandCounter(0);
-    std::unique_lock<std::mutex> lk(mutexOutput);
 
     auto processBlocks = [&bulkCounter, &commandCounter, &strID](TQueueMT<TBulk>& queue){
         //std::cout << "Console working" << std::endl;
@@ -85,6 +84,7 @@ void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& q
 
     while(!queue.empty()) processBlocks(queue);
 
+    std::unique_lock<std::mutex> lk(mutexOutput);
     cond_var.wait(lk);
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
 }
