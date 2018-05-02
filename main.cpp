@@ -17,8 +17,8 @@ std::mutex  mutexQueue;
 void threadConsoleFunction(bool& flagWorking,
     const std::string strID,
     TQueueMT<TBulk>& queue,
-    size_t      bulkCounter,
-    size_t      commandCounter){
+    size_t&      bulkCounter,
+    size_t&      commandCounter){
 
 
     auto processQueue = [&bulkCounter, &commandCounter](TQueueMT<TBulk>& queue){
