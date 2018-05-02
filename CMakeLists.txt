@@ -11,9 +11,8 @@ find_package (Threads)
 
 add_executable(bulkmt
 					main.cpp 
-					src/TCommandStore.cpp
 					src/TCommandProcessor.cpp 
-					src/TBlockStore.cpp
+					src/TBulk.cpp
 					src/TBlockProcessor.cpp
 					src/TConsole.cpp
 					src/TObserver.cpp)
