@@ -45,7 +45,7 @@ void threadConsoleFunction(bool& flagWorking,
     while(!queue.empty())   processQueue(queue);
 
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
-
+    std::cout << "notify cond_var"<<std::endl;
     cond_var.notify_one();
 }
 
@@ -81,8 +81,10 @@ void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& q
     while(!queue.empty()) processBlocks(queue);
 
     std::unique_lock<std::mutex> lk(mutexOutput);
+    std::cout << "waiting cond_var"<<std::endl;
     cond_var.wait(lk);
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
+    std::cout << "notify cond_var"<<std::endl;
     cond_var.notify_one();
 }
 
