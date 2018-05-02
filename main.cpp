@@ -33,10 +33,7 @@ void threadConsoleFunction(bool& flagWorking,
             TBulk bulk(queue.pop_front());
             ++bulkCounter;
 
-            {
-                std::lock_guard<std::mutex> lock(mutexOutput);
-                bulk.printCommands(std::cout);
-            }
+            bulk.printCommands(std::cout);
             commandCounter+=bulk.size();
         }
     };
@@ -47,10 +44,9 @@ void threadConsoleFunction(bool& flagWorking,
     //  Завершаемо бработку того, что успели накидать в очередь
     while(!queue.empty())   processQueue(queue);
 
-    std::lock_guard<std::mutex> lock(mutexOutput);
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
 
-    cond_var.notify_all();
+    cond_var.notify_one();
 }
 
 void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& queue){
@@ -87,6 +83,7 @@ void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& q
     std::unique_lock<std::mutex> lk(mutexOutput);
     cond_var.wait(lk);
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
+    cond_var.notify_one();
 }
 
 
