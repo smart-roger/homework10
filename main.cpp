@@ -90,9 +90,7 @@ void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& q
 
 int main(int argc, char** argv)
 {
-
     //  Считываем размер блока
-
     if(argc<2){
         std::cerr << "Wrong arguments count. Using: bulk <bulk_size>"<< std::endl;
         return -1;
