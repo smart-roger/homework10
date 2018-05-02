@@ -6,7 +6,6 @@
 #include "TConsole.h"
 #include "TQueueMT.h"
 #include "TCommandProcessor.h"
-#include "TCommandStore.h"
 #include "TBlockProcessor.h"
 
 //  Мютекс для упорядочивания вывода на консоль
@@ -15,21 +14,21 @@ std::mutex  mutexOutput;
 std::mutex  mutexQueue;
 
 //  Функция для потока вывода в консоль
-void threadConsoleFunction(bool& flagWorking, const std::string strID, queueStore& queue){
+void threadConsoleFunction(bool& flagWorking, const std::string strID, TQueueMT<TBulk>& queue){
     size_t      bulkCounter(0);
     size_t      commandCounter(0);
 
-    auto processQueue = [&bulkCounter, &commandCounter](queueStore& queue){
+    auto processQueue = [&bulkCounter, &commandCounter](TQueueMT<TBulk>& queue){
         //std::cout << "Console working" << std::endl;
         if(!queue.empty()){
-            TCommandStore store(queue.pop_front());
+            TBulk bulk(queue.pop_front());
             ++bulkCounter;
 
             {
                 std::lock_guard<std::mutex> lock(mutexOutput);
-                store.printCommands(std::cout);
+                bulk.printCommands(std::cout);
             }
-            commandCounter+=store.size();
+            commandCounter+=bulk.size();
         }
     };
 
@@ -43,11 +42,11 @@ void threadConsoleFunction(bool& flagWorking, const std::string strID, queueStor
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
 }
 
-void threadFileFunction(bool& flagWorking, std::string strID, queueBlocks& queue){
+void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& queue){
     size_t      bulkCounter(0);
     size_t      commandCounter(0);
 
-    auto processBlocks = [&bulkCounter, &commandCounter, &strID](queueBlocks& queue){
+    auto processBlocks = [&bulkCounter, &commandCounter, &strID](TQueueMT<TBulk>& queue){
         //std::cout << "Console working" << std::endl;
         if(!queue.empty()){
             mutexQueue.lock();
@@ -56,14 +55,14 @@ void threadFileFunction(bool& flagWorking, std::string strID, queueBlocks& queue
                 return;
             }
 
-            TBlockStore store(queue.pop_front());
+            TBulk store(queue.pop_front());
             mutexQueue.unlock();
 
             ++bulkCounter;
 
             std::string filename = strID + "_"
-                                    + std::to_string(store.getTimeStart()) + "_"
-                                    + std::to_string(store.getID());
+                                    + std::to_string(store.timeStart()) + "_"
+                                    + std::to_string(rand());
             std::ofstream   ofile(filename);
             store.printCommands(ofile);
             commandCounter+=store.size();
@@ -83,73 +82,31 @@ void threadFileFunction(bool& flagWorking, std::string strID, queueBlocks& queue
 int main(int argc, char** argv)
 {
 
-    /*std::stringstream sstream;
-    //sstream << "" <<std::endl;
-    sstream << "{" <<std::endl;
-    sstream << "cmd1" <<std::endl;
-    sstream << "cmd2" <<std::endl;
-    sstream << "{" <<std::endl;
-    sstream << "cmd3" <<std::endl;
-    sstream << "cmd4" <<std::endl;
-    sstream << "}" <<std::endl;
-    sstream << "cmd5" <<std::endl;
-    sstream << "cmd6" <<std::endl;
-    sstream << "}" <<std::endl;
-    sstream << "cmd7" <<std::endl;
-    sstream << "cmd8" <<std::endl;
-    sstream << "{" <<std::endl;
-    sstream << "cmd11" <<std::endl;
-    sstream << "cmd12" <<std::endl;
-    sstream << "{" <<std::endl;
-    sstream << "cmd13" <<std::endl;
-    sstream << "cmd14" <<std::endl;
-    sstream << "}" <<std::endl;
-    sstream << "cmd15" <<std::endl;
-    sstream << "cmd16" <<std::endl;
-    sstream << "}" <<std::endl;
-    sstream << "cmd17" <<std::endl;
-    sstream << "cmd18" <<std::endl;
-    sstream << "{" <<std::endl;
-    sstream << "cmd21" <<std::endl;
-    sstream << "cmd22" <<std::endl;
-    sstream << "{" <<std::endl;
-    sstream << "cmd23" <<std::endl;
-    sstream << "cmd24" <<std::endl;
-    sstream << "}" <<std::endl;
-    sstream << "cmd25" <<std::endl;
-    sstream << "cmd26" <<std::endl;
-    sstream << "}" <<std::endl;
-    sstream << "cmd27" <<std::endl;
-    sstream << "cmd28" <<std::endl;
-    sstream << "" <<std::endl;*/
     //  Считываем размер блока
-    //std::cout << argc << std::endl;
+
     if(argc<2){
         std::cerr << "Wrong arguments count. Using: bulk <bulk_size>"<< std::endl;
         return -1;
     }
     bool working(true);
     auto bulk_size(std::stoul(argv[1]));
-    //std::cout << bulk_size << std::endl;
 
-    queueStore    queueConsole;
-    queueBlocks   queueForBlocks;
+    TQueueMT<TBulk> queueConsole;
+    TQueueMT<TBulk> queueFile;
 
     std::thread threadConsole(threadConsoleFunction, std::ref(working), "thread log", std::ref(queueConsole));
-    std::thread threadFile1(threadFileFunction, std::ref(working), "thread file1", std::ref(queueForBlocks));
-    std::thread threadFile2(threadFileFunction, std::ref(working), "thread file2", std::ref(queueForBlocks));
-
-    //  Подготавливаем ввод
+    std::thread threadFile1(threadFileFunction, std::ref(working), "thread file1", std::ref(queueFile));
+    std::thread threadFile2(threadFileFunction, std::ref(working), "thread file2", std::ref(queueFile));
 
     //TConsole console(sstream);
     TConsole console(std::cin);
 
     //  Добавляем обработчики
     //  Обработчик команд
-    console.addObserver(std::make_shared<TCommandProcessor>(bulk_size, queueConsole));
+    console.addObserver(std::make_shared<TCommandProcessor>(bulk_size, queueConsole, queueFile));
 
     //  Обработчик блоков
-    console.addObserver(std::make_shared<TBlockProcessor>(queueConsole, queueForBlocks));
+    console.addObserver(std::make_shared<TBlockProcessor>(queueConsole, queueFile));
 
 
     //  Обрабатываем ввод

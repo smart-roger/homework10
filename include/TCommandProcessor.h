@@ -3,11 +3,9 @@
 
 #include "TObserver.h"
 #include "TQueueMT.h"
-#include "TCommandStore.h"
+#include "TBulk.h"
 #include <vector>
 #include <string>
-
-using queueStore = TQueueMT<TCommandStore>;
 
 /*!
     Обработчик для потока команд "нулевого уровня
@@ -15,7 +13,7 @@ using queueStore = TQueueMT<TCommandStore>;
 class TCommandProcessor : public TObserver
 {
     public:
-        TCommandProcessor(size_t bulkSize, queueStore& queueOut);
+        TCommandProcessor(size_t bulkSize, TQueueMT<TBulk>& queueConsole, TQueueMT<TBulk>& queueFile);
         virtual ~TCommandProcessor();
 
     protected:
@@ -30,9 +28,10 @@ class TCommandProcessor : public TObserver
         size_t  _bulkSize;
         //  Счётчик открытых блоков
         size_t  _blockCounter;
-        TCommandStore   _store;
-        //  Хранилище для команд
-        queueStore&   _queue;
+        TBulk   _store;
+
+        TQueueMT<TBulk>&   _queueConsole;
+        TQueueMT<TBulk>&   _queueFile;
 };
 
 #endif // TCOMMANDPROCESSOR_H

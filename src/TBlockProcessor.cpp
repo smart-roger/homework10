@@ -1,11 +1,10 @@
 #include "TBlockProcessor.h"
 
-TBlockProcessor::TBlockProcessor(TQueueMT<TCommandStore>& queueForConsole, queueBlocks& queueForBlocks):
+TBlockProcessor::TBlockProcessor(TQueueMT<TBulk>& queueForConsole, TQueueMT<TBulk>& queueForBlocks):
     TObserver(),
     _queueConsole(queueForConsole),
-    _queueBlocks(queueForBlocks),
+    _queueFile(queueForBlocks),
     _blockCounter(0),
-    _timeStart(0),
     _store()
 {
     //ctor
@@ -17,8 +16,6 @@ TBlockProcessor::TBlockProcessor(TQueueMT<TCommandStore>& queueForConsole, queue
 }
 
 void TBlockProcessor::startBlock(){
-    if(0==_blockCounter)
-        _timeStart = std::time(nullptr);
     ++_blockCounter;
 }
 
@@ -43,6 +40,6 @@ void TBlockProcessor::handleCommand(const std::string& command){
 }
 
 void TBlockProcessor::logBlock(){
-    _queueConsole.push_back(_store.getCommandStore());
-    _queueBlocks.push_back(_store);
+    _queueConsole.push_back(_store);
+    _queueFile.push_back(_store);
 }

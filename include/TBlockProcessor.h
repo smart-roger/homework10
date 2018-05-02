@@ -2,20 +2,15 @@
 #define TBLOCKPROCESSOR_H
 
 #include <TObserver.h>
-#include "TCommandStore.h"
-#include "TBlockStore.h"
+#include "TBulk.h"
 #include "TQueueMT.h"
 #include <ctime>
 #include <fstream>
 
-//  Очередь блоков
-using queueBlocks = TQueueMT<TBlockStore>;
-
-
 class TBlockProcessor : public TObserver
 {
     public:
-        TBlockProcessor(TQueueMT<TCommandStore>& queueConsole, queueBlocks& queueForBlocks);
+        TBlockProcessor(TQueueMT<TBulk>& queueConsole, TQueueMT<TBulk>& queueForBlocks);
         virtual ~TBlockProcessor();
 
     protected:
@@ -27,15 +22,14 @@ class TBlockProcessor : public TObserver
 
     private:
         //  Очередь для вывода на консоль
-        TQueueMT<TCommandStore>&     _queueConsole;
+        TQueueMT<TBulk>& _queueConsole;
         //  Очередь для вывода блоков в файл
-        queueBlocks&                _queueBlocks;
+        TQueueMT<TBulk>& _queueFile;
         //  Счётчик блоков
         size_t          _blockCounter;
-        //  Время начала блока
-        std::time_t     _timeStart;
+
         //  Текущий накопитель команд блока
-        TBlockStore   _store;
+        TBulk   _store;
 };
 
 #endif // TBLOCKPROCESSOR_H

@@ -18,7 +18,7 @@ class TQueueMT
         /*!
             Метод добавления элемента в очередь
         */
-        void push_back(const T&  val){
+        void push_back(T  val){
             std::lock_guard<std::mutex> lock(_mutex);
             _queue.push_back(val);
         };
