@@ -7,6 +7,8 @@ include_directories(
 	include
 )
 
+find_package (Threads)
+
 add_executable(bulkmt
 					main.cpp 
 					src/TCommandStore.cpp
@@ -16,10 +18,12 @@ add_executable(bulkmt
 					src/TConsole.cpp
 					src/TObserver.cpp)
 
+target_link_libraries (bulkmt ${CMAKE_THREAD_LIBS_INIT})
+
 set_target_properties(bulkmt PROPERTIES
 	CXX_STANDARD 14
 	CXX_STANDARD_REQUIRED ON
-	COMPILE_OPTIONS -Wpedantic -Wall -Wextra -pthread
+	COMPILE_OPTIONS -Wpedantic -Wall -Wextra
 )
 
 install(TARGETS bulkmt RUNTIME DESTINATION bin)
