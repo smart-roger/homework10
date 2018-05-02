@@ -1,11 +1,11 @@
 #include "TConsole.h"
 
-TConsole::TConsole(std::istream& user_input):
+TConsole::TConsole(std::istream& user_input, size_t& bulkCounter, size_t& commandCounter):
     _input(user_input),
     _observers(),
     _totalLines(0),
-    _totalBlocks(0),
-    _totalCommands(0)
+    _totalBlocks(bulkCounter),
+    _totalCommands(commandCounter)
 {
     //ctor
 }
@@ -43,12 +43,6 @@ void TConsole::run(){
                     //  Что должно происходить при нарушении синтаксиса?
                     //else{}
 
-                    if(0==blockCounter){
-                    //  Если блок получен полностью - отправляем на обработку
-                        ++_totalBlocks;
-
-                    }
-
                     std::for_each(_observers.begin(), _observers.end(),[command](auto ptrProcessor){
                         ptrProcessor->finishBlock();
                         });
@@ -60,8 +54,6 @@ void TConsole::run(){
                     std::for_each(_observers.begin(), _observers.end(),[command](auto ptrProcessor){
                         ptrProcessor->handleCommand(command);
                         });
-
-                    ++_totalCommands;
                     break;
                 }
         }

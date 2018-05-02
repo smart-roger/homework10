@@ -19,7 +19,7 @@ class TConsole
 
         TConsole() = delete;
 
-        TConsole(std::istream& user_input);
+        TConsole(std::istream& user_input, size_t& bulkCounter, size_t& commandCounter);
         ~TConsole();
         /*!
             Метод,запускающий цикл обработки ввода
@@ -39,8 +39,8 @@ class TConsole
         std::vector <ptrObserver>   _observers;
 
         size_t  _totalLines;
-        size_t  _totalBlocks;
-        size_t  _totalCommands;
+        size_t&  _totalBlocks;
+        size_t&  _totalCommands;
 };
 
 #endif // TCONSOLE_H

@@ -14,9 +14,12 @@ std::mutex  mutexOutput;
 std::mutex  mutexQueue;
 
 //  Функция для потока вывода в консоль
-void threadConsoleFunction(bool& flagWorking, const std::string strID, TQueueMT<TBulk>& queue){
-    size_t      bulkCounter(0);
-    size_t      commandCounter(0);
+void threadConsoleFunction(bool& flagWorking,
+    const std::string strID,
+    TQueueMT<TBulk>& queue,
+    size_t      bulkCounter,
+    size_t      commandCounter){
+
 
     auto processQueue = [&bulkCounter, &commandCounter](TQueueMT<TBulk>& queue){
         //std::cout << "Console working" << std::endl;
@@ -94,12 +97,20 @@ int main(int argc, char** argv)
     TQueueMT<TBulk> queueConsole;
     TQueueMT<TBulk> queueFile;
 
-    std::thread threadConsole(threadConsoleFunction, std::ref(working), "thread log", std::ref(queueConsole));
+    size_t bulkCounter(0);
+    size_t commandCounter(0);
+
+    std::thread threadConsole(threadConsoleFunction,
+                              std::ref(working),
+                              "thread log",
+                              std::ref(queueConsole),
+                              std::ref(bulkCounter),
+                              std::ref(commandCounter));
     std::thread threadFile1(threadFileFunction, std::ref(working), "thread file1", std::ref(queueFile));
     std::thread threadFile2(threadFileFunction, std::ref(working), "thread file2", std::ref(queueFile));
 
     //TConsole console(sstream);
-    TConsole console(std::cin);
+    TConsole console(std::cin,std::ref(bulkCounter),std::ref(commandCounter));
 
     //  Добавляем обработчики
     //  Обработчик команд
