@@ -3,6 +3,8 @@
 #include <sstream>
 #include <thread>
 
+#include <condition_variable>
+
 #include "TConsole.h"
 #include "TQueueMT.h"
 #include "TCommandProcessor.h"
@@ -10,8 +12,12 @@
 
 //  Мютекс для упорядочивания вывода на консоль
 std::mutex  mutexOutput;
+
 //  Мютекс для упорядочивания обращения к очереди блоков
 std::mutex  mutexQueue;
+
+//  Условная переменная, чтобы вывод метрик шёл после вывода на консоль
+std::condition_variable cond_var;
 
 //  Функция для потока вывода в консоль
 void threadConsoleFunction(bool& flagWorking,
@@ -43,11 +49,14 @@ void threadConsoleFunction(bool& flagWorking,
 
     std::lock_guard<std::mutex> lock(mutexOutput);
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
+
+    cond_var.notify_all();
 }
 
 void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& queue){
     size_t      bulkCounter(0);
     size_t      commandCounter(0);
+    std::unique_lock<std::mutex> lk(mutexOutput);
 
     auto processBlocks = [&bulkCounter, &commandCounter, &strID](TQueueMT<TBulk>& queue){
         //std::cout << "Console working" << std::endl;
@@ -76,7 +85,7 @@ void threadFileFunction(bool& flagWorking, std::string strID, TQueueMT<TBulk>& q
 
     while(!queue.empty()) processBlocks(queue);
 
-    std::lock_guard<std::mutex> lock(mutexOutput);
+    cond_var.wait(lk);
     std::cout << strID << " bulks: " << bulkCounter << " commands: " << commandCounter << std::endl;
 }
 
